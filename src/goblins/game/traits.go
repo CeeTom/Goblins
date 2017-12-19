@@ -1,0 +1,38 @@
+package game
+
+type TraitId uint16
+
+var TraitNames = [...]string{
+	"",
+	"Trait#1",
+	"Trait#2",
+	"Trait#3",
+	"Trait#4",
+	"Trait#5",
+	"Trait#6",
+	"Trait#7",
+	"Trait#8",
+	"Trait#9",
+	"Trait#10",
+	"Trait#11",
+	"Trait#12",
+	"Trait#13",
+	"Trait#14",
+	"Trait#15",
+	"Trait#16",
+	"Trait#17",
+	"Trait#18",
+	"Trait#19",
+	"Trait#20",
+	"Trait#21",
+	"Trait#22",
+	"Trait#23",
+	"Trait#24",
+	"Trait#25",
+	"Trait#26",
+	"Trait#27",
+	"Trait#28",
+	"Trait#29",
+	"Trait#30",
+	"Trait#31",
+}

@@ -1,0 +1,62 @@
+Goblins is a browser-based monster breeding game: players will obtain monsters and then train them for exploration and combat.
+
+Core Mechanics:
+
+    * Monsters obtained via Rune system
+    * Monsters are trained by player to increase attributes
+    * Monsters retire after a time, or run away if mistreated
+
+Rune System:
+
+    * ~64 runes unlockable throughout the game
+    * Monsters are obtained by combining runes in a sequence (up to ~9)
+    * The combination of runes dictates the type and attributes of the monster
+
+    * Do breeds dictate ability tables?
+
+Training System:
+
+    * Mobile-Friendly?
+    * Stamina recharges over time
+    * Each action uses stamina for some benefit eg.
+        
+        * Increase attributes
+        * Increase happiness / decrease stress
+        * Combat
+        * Exploration (to acq items? skills?) 
+
+Combat System:
+   
+    (See combat.txt)
+    
+Attribute System:
+
+    Core Attributes:
+
+        * Agility: raw speed, move speed in combat, dodge success chance, etc?
+        * Strength: raw power, physical damage, block?, physical energy?, etc?
+        * Vitality: hp, poison/status? resist, etc?
+        * MagicStrength: magic damage, deflect/reflect chance?, etc?
+        * MagicVitality: magic energy?, magic shield mechanic?, etc?
+
+        * Minimum required core attributes for abilities?
+
+    Personality/Breed Attributes:
+
+        * Proclivities: dictate training effectiveness for the core stats
+
+    Traits:
+        * (own design file)
+
+Exploration System:
+
+    One way to unlock Runes?
+
+Item System:
+
+    Possessing Runes?
+    Money?
+    Food:
+        Not nagware
+        Food could effect stamina regen speed
+

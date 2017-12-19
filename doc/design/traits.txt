@@ -1,0 +1,9 @@
+Trait Ideas:
+
+    * Iron Will: convert magic def to phys somehow
+    * Bookish: better magic gains, worse phys gains
+    * Brutish: better phys gains, worse magic
+    * Dextrous: better agi gains, worse def gains
+    * Stalwart: better def gains, worse agi gains
+    * Student: better stat gains, reduced combat damage
+    * Unpredictable: modifers change ?slightly? each training

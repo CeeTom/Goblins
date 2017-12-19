@@ -1,0 +1,19 @@
+Combat System Questions:
+
+    * Mobile-Friendly?
+    * Options:
+
+        * Turn-based grid combat a la tactics rpg
+        * Turn-based static combat a la jrpg
+        * Real-time positional combat (networking?)
+
+Combat Damage:
+
+    * All attacks deal a (possibly empty) series of damage to both enemy and
+      self
+    * Each of those damages has an associated type, to which the target may
+      have some form of resistance.
+    * Each of those damages also has a pierce percentage, which determines how
+      effective those resistances are.
+    * Attacks may also have a set of probabilities to inflict corresponding
+      statuses.
