@@ -5,6 +5,7 @@ const (
 	NumberOfStats          = 5
 	ProclivityTableColumns = 32
 	TraitTableColumns      = 32
+	MaxStartAttacks        = 4
 )
 
 type BreedId uint16
@@ -13,7 +14,7 @@ type Breed struct {
 	Id              BreedId
 	Name            string
 	ProclivityTable [NumberOfStats][ProclivityTableColumns]float32
-	AttackTable     []AttackId
+	AttackTable     [MaxStartAttacks]AttackId
 	TraitTable      [MaxBreedTraits][TraitTableColumns]TraitId
 }
 
