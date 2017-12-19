@@ -1,0 +1,9 @@
+Breeds are stored one per file with the following format
+
+    8-byte header:        "BREED " + 2 Zeros (reserved for versioning)
+    uint16:               Breed Id
+    5*32*float32:         Proclivity Table
+    3*32*uint8:           Trait Table
+    4*uint16:             Starting Attacks
+    uint16:               Name Bytes
+    Name Bytes * uint8:   Name in utf-8
