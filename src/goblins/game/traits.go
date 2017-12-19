@@ -1,6 +1,6 @@
 package game
 
-type TraitId uint16
+type TraitId uint8
 
 var TraitNames = [...]string{
 	"",
