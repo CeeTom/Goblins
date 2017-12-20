@@ -1,6 +1,8 @@
-goblins
-lib
-bin
-pkg/*
-src/github.com/pkg/*
+/goblins
+/attack-editor
+/breed-editor
+/lib
+/bin
+/pkg
+/src/github.com/pkg/*
 *.swp
