@@ -1,4 +1,6 @@
-./goblins
-./lib
-./bin
+goblins
+lib
+bin
+pkg/*
+src/github.com/pkg/*
 *.swp
