@@ -8,11 +8,11 @@ const (
 )
 
 type Damage struct {
-	DamageType Type
-	Amount     int32
-	Pierce     float32
-	Statuses   []struct {
-		StatusId    Status
+	Type     DamageType
+	Amount   int32
+	Pierce   float32
+	Statuses []struct {
+		Status      StatusId
 		Probability float32
 	}
 }
