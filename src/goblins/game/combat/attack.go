@@ -14,8 +14,8 @@ const (
 const (
 	Zero = ScalingFuncId(iota)
 	Linear
-    Exponential
-    Logarithmic
+	Exponential
+	Logarithmic
 )
 
 type DamageBasis struct {
