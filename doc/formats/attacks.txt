@@ -1,9 +1,7 @@
 Attacks are stored one per file in the following format:
 
     8-byte header:          "ATTACK" + 2 zeros (reserved for versioning)
-    uint8:                  Scale Stat Id
-    float32:                Scale Multi
-    float32:                Variance
+    uint16:                 Attack Id
     uint16:                 Damages Count
     Damages Count * $:      Damages
     uint16:                 Self Damages Count
@@ -16,6 +14,9 @@ where a "Damage" is in the following format:
     uint8:                  Damage Type
     int32:                  Damage
     float32:                Pierce
+    uint8:                  Scale Stat Id
+    float32:                Scale Multi
+    float32:                Variance
     uint16:                 Status Count
     Status Count * 5:       Statuses
 
