@@ -6,10 +6,56 @@ import (
 	"github.com/pkg/errors"
 	"goblins/game/combat"
 	"io"
+	"io/ioutil"
+	"os"
+	"strings"
 )
 
 // "ATTACK" 0x00 0x00
 const attackHeader = 0x0000756765848465
+
+func ReadAllAttacks(dirname string) ([]*combat.Attack, error) {
+	ret := make([]*combat.Attack, 0, 64)
+
+	files, err := ioutil.ReadDir(dirname)
+	if err != nil {
+		return nil, errors.Wrap(err, "Couldn't read attack directory entries")
+	}
+
+	for _, fileInfo := range files {
+		// skip directories
+		if !fileInfo.IsDir() {
+			name := fileInfo.Name()
+			if strings.HasSuffix(name, ".atk") {
+				file, err := os.Open(name)
+				if err != nil {
+					msg := fmt.Sprintf("Couldn't open attack file: %s", name)
+					return nil, errors.Wrap(err, msg)
+				}
+				atk, err := ReadAttack(file)
+				if err != nil {
+					msg := fmt.Sprintf("Couldn't read attack file: %s", name)
+					return nil, errors.Wrap(err, msg)
+				}
+				idx := int(atk.Id)
+				if idx >= len(ret) {
+					if idx >= cap(ret) {
+						nret := make([]*combat.Attack, len(ret), cap(ret)*2)
+						copy(nret, ret)
+						ret = nret
+					}
+					ret = ret[:idx+1]
+				}
+				if ret[idx] != nil {
+					msg := fmt.Sprintf("Attacks %s and %s have same id %d",
+						ret[idx].Name, atk.Name, idx)
+					return nil, errors.New(msg)
+				}
+			}
+		}
+	}
+	return ret, nil
+}
 
 func ReadAttack(r io.Reader) (*combat.Attack, error) {
 	ret := new(combat.Attack)
