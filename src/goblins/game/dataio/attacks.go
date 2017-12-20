@@ -28,6 +28,16 @@ func ReadAttack(r io.Reader) (*combat.Attack, error) {
 		return nil, errors.Wrap(err, "Couldn't read attack id")
 	}
 
+    err = binary.Read(r, little, &ret.StrengthCost)
+    if err != nil {
+        return nil, errors.Wrap(err, "Couldn't read attack strength cost")
+    }
+
+    err = binary.Read(r, little, &ret.MagicCost)
+    if err != nil {
+        return nil, errors.Wrap(err, "Couldn't read attack magic cost")
+    }
+
 	dmgCount, err := readU16(r)
 	if err != nil {
 		return nil, errors.Wrap(err, "Couldn't read attack damage count")
@@ -82,6 +92,11 @@ func readDamageBasis(r io.Reader, basis *combat.DamageBasis) error {
 		return errors.Wrap(err, "Couldn't read damage pierce")
 	}
 
+	err = binary.Read(r, little, &basis.ScalingFunc)
+	if err != nil {
+		return errors.Wrap(err, "Couldn't read damage scaling function")
+	}
+
 	err = binary.Read(r, little, &basis.ScalingStat)
 	if err != nil {
 		return errors.Wrap(err, "Couldn't read damage scaling stat")
@@ -130,6 +145,16 @@ func WriteAttack(w io.Writer, attack *combat.Attack) error {
 		return errors.Wrap(err, "Couldn't write attack id")
 	}
 
+    err = binary.Write(w, little, attack.StrengthCost)
+    if err != nil {
+        return errors.Wrap(err, "Couldn't write attack strength cost")
+    }
+
+    err = binary.Write(w, little, attack.MagicCost)
+    if err != nil {
+        return errors.Wrap(err, "Couldn't write attack magic cost")
+    }
+
 	err = binary.Write(w, little, uint16(len(attack.Damages)))
 	if err != nil {
 		return errors.Wrap(err, "Couldn't write attack damages count")
@@ -177,6 +202,11 @@ func writeDamageBasis(w io.Writer, basis *combat.DamageBasis) error {
 	err = binary.Write(w, little, basis.Pierce)
 	if err != nil {
 		return errors.Wrap(err, "Couldn't write damage pierce")
+	}
+
+	err = binary.Write(w, little, basis.ScalingFunc)
+	if err != nil {
+		return errors.Wrap(err, "Couldn't write damage scaling function")
 	}
 
 	err = binary.Write(w, little, basis.ScalingStat)
