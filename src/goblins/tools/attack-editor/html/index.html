@@ -2,6 +2,33 @@
 <head>
     <script type="text/javascript">
         "use strict";
+
+        class Eventer {
+            constructor() {
+                this.listeners = {};
+            }
+
+            addEventListener(name, f) {
+                if (!this.listeners[name])
+                    this.listeners[name] = [];
+                this.listeners[name].push(f);
+            }
+
+            removeEventListener(name, f) {
+                if (this.listeners[name]) {
+                    this.listeners[name] =
+                        this.listeners[name].filter(v => v != f);
+                }
+            }
+
+            dispatchEvent(name, o) {
+                if (this.listeners[name])
+                    for (let f in this.listeners[name])
+                        f(o);
+                return true;
+            }
+        }
+
         function loadIdNamePairs(endPoint) {
             return new Promise(function(res, rej) {
                 let xhr = new XMLHttpRequest();
@@ -10,7 +37,7 @@
             });
         }
 
-        function attackSelector(attacks) {
+        function attackSelector(gameInfo, attacks) {
             let select = document.createElement("select");
             let newOption = document.createElement("option");
             newOption.innerHTML = "[New Attack]";
@@ -24,7 +51,7 @@
             return select;
         }
 
-        function attackDisplay(attack) {
+        function attackDisplay(gameInfo, attack) {
             let display = document.createElement("div");
 
             let id = document.createElement("span");
@@ -43,41 +70,103 @@
 
             let magCost = document.createElement("input");
             magCost.type = "number";
-            3magCost.value = attack.MagicCost.toString();
+            magCost.value = attack.MagicCost.toString();
             display.appendChild(magCost);
 
-            let dmgs = damageList(attack.Damages);
-            display.appendChild(dmgs);
-            
-            let selfDmgs = damageList(attack.SelfDamages);
-            display.appendChild(selfDmgs);
+            let dmgs = new DamageList(gameInfo, attack.Damages);
+            display.appendChild(dmgs.element);
+
+            let selfDmgs = new DamageList(gameInfo, attack.SelfDamages);
+            display.appendChild(selfDmgs.element);
 
             let saveButton = document.createElement("button");
             button.innerHTML = "Save";
             display.appendChild(saveButton);
+
+            return { element: display };
         }
 
-        function damageList(damages) {
+        class DamageLi extends Eventer {
+            constructor(gameInfo, damage) {
+                let li = document.createElement("li");
+                let selector = damageSelector(gameInfo, damages[i]);
+                let deleteButton = document.createElement("button");
+                deleteButton.innerHTML = "Remove";
+                deleteButton.addEventListener('click',
+                    () => this.dispatchEvent('item-removed', selector));
+                li.appendChild(selector.element);
+                li.appendChild(deleteButton);
+
+                this.selector = selector;
+                this.element = li;
+            }
+        }
+
+        class DamageList {
+            addDamage(damage) {
+                let li = new DamageLi(this.gameInfo, damage);
+                this.currDamages.push(li);
+                this.element.insertBefore(li, this.addLi);
+            }
+
+            asDamages() {
+                return this.currDamages.map(v => v.selector.asDamage());
+            }
+
+            constructor(gameInfo, damages) {
+                this.gameInfo = gameInfo;
+                this.currDamages = [];
+                this.element = document.createElement("ul");
+                this.addLi = document.createElement("li");
+
+                function newDamage() {
+                    return {
+                        Type: 0,
+                        Amount: 0,
+                        Pierce: 0,
+                        Statuses: [],
+                        ScalingFunc: 0,
+                        ScalingStat: 0,
+                        ScalingMulti: 0,
+                        Variance: 0,
+                    };
+                }
+
+                let addButton = document.createElement("button");
+                addButton.innerHTML = "Add Damage";
+
+                addButton.addEventListener("click",
+                    () => this.addDamage(newDamage()));
+
+                this.addLi.appendChild(addButton);
+                this.element.appendChild(this.addLi);
+
+                for (let i = 0; i < damages.length; i++)
+                    this.addDamage(damages[i]);
+            }
+        }
+
+        function damageSelector(gameInfo, damage) {
+
+            return {
+                element: null,
+                asDamage: () => null,
+            };
+        }
+
+        function statusList(gameInfo, statuses) {
 
         }
 
-        function damageSelector(damage) {
+        function statusSelector(gameInfo, status) {
 
         }
 
-        function statusList(statuses) {
+        function scalingStatSelector(gameInfo, stat) {
 
         }
 
-        function statusSelector(status) {
-
-        }
-
-        function scalingStatSelector(stat) {
-
-        }
-
-        function scalingFuncSelector(scaleF) {
+        function scalingFuncSelector(gameInfo, scaleF) {
 
         }
 
