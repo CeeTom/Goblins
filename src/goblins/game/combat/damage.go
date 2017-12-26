@@ -1,14 +1,31 @@
 package combat
 
-type DamageType uint8
+type DamageTypeId uint8
 
 const (
-	PhysDamage  = DamageType(1)
-	MagicDamage = DamageType(2)
+	PhysDamage  = DamageTypeId(1 + iota)
+	MagicDamage
 )
 
+var AllDamageTypes = [...]DamageTypeId {
+    PhysDamage,
+    MagicDamage,
+}
+
+func (dmg DamageTypeId) AsU64() uint64 {
+    return uint64(dmg)
+}
+
+func (dmg DamageTypeId) Name() string {
+    switch dmg {
+    case PhysDamage: return "PhysDamage"
+    case MagicDamage: return "MagicDamage"
+    default: return "[Unknown Damage Type Id]"
+    }
+}
+
 type Damage struct {
-	Type     DamageType
+	Type     DamageTypeId
 	Amount   int32
 	Pierce   float32
 	Statuses []struct {
