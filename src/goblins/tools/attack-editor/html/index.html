@@ -1,1 +1,91 @@
 <!DOCTYPE html>
+<head>
+    <script type="text/javascript">
+        "use strict";
+        function loadIdNamePairs(endPoint) {
+            return new Promise(function(res, rej) {
+                let xhr = new XMLHttpRequest();
+                xhr.onload = () => { res(JSON.parse(xhr.responseText)); }
+                xhr.onerror = () => { rej(xhr.responseText); }
+            });
+        }
+
+        function attackSelector(attacks) {
+            let select = document.createElement("select");
+            let newOption = document.createElement("option");
+            newOption.innerHTML = "[New Attack]";
+            select.appendChild(newOption);
+            for (let i = 0; i < attacks.length; i++) {
+                let option = document.createElement("option");
+                option.innerHTML = attacks[i].Name;
+                option.attack = attack;
+                select.appendChild(option);
+            }
+            return select;
+        }
+
+        function attackDisplay(attack) {
+            let display = document.createElement("div");
+
+            let id = document.createElement("span");
+            id.innerHTML = attack.Id.toString();
+            display.appendChild(id);
+
+            let name = document.createElement("input");
+            name.type = "text";
+            name.value = attack.Name;
+            display.appendChild(name);
+
+            let strCost = document.createElement("input");
+            strCost.type = "number";
+            strCost.value = attack.StrengthCost.toString();
+            display.appendChild(strCost);
+
+            let magCost = document.createElement("input");
+            magCost.type = "number";
+            3magCost.value = attack.MagicCost.toString();
+            display.appendChild(magCost);
+
+            let dmgs = damageList(attack.Damages);
+            display.appendChild(dmgs);
+            
+            let selfDmgs = damageList(attack.SelfDamages);
+            display.appendChild(selfDmgs);
+
+            let saveButton = document.createElement("button");
+            button.innerHTML = "Save";
+            display.appendChild(saveButton);
+        }
+
+        function damageList(damages) {
+
+        }
+
+        function damageSelector(damage) {
+
+        }
+
+        function statusList(statuses) {
+
+        }
+
+        function statusSelector(status) {
+
+        }
+
+        function scalingStatSelector(stat) {
+
+        }
+
+        function scalingFuncSelector(scaleF) {
+
+        }
+
+        function populateInterface() {
+        }
+    </script>
+</head>
+<body>
+    <h1>Goblins: Attack Editor</h2>
+    <div id="editor"></div>
+</body>
