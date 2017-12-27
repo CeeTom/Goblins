@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-    "goblins/game"
+	"goblins/game"
 	"goblins/game/combat"
 	"goblins/game/dataio"
 	"net/http"
@@ -27,10 +27,10 @@ func main() {
 	attacksP := &attacks
 
 	http.Handle("/attacks", serveAttacks(attacksP))
-    http.Handle("/stats", http.HandlerFunc(serveStats))
-    http.Handle("/scalingFuncs", http.HandlerFunc(serveScalingFuncs))
-    http.Handle("/damageTypes", http.HandlerFunc(serveDamageTypes))
-    http.Handle("/statuses", http.HandlerFunc(serveStatuses))
+	http.Handle("/stats", http.HandlerFunc(serveStats))
+	http.Handle("/scalingFuncs", http.HandlerFunc(serveScalingFuncs))
+	http.Handle("/damageTypes", http.HandlerFunc(serveDamageTypes))
+	http.Handle("/statuses", http.HandlerFunc(serveStatuses))
 	http.Handle("/", http.FileServer(http.Dir(*webDir)))
 
 	err = http.ListenAndServe(*host, nil)
@@ -42,13 +42,13 @@ func main() {
 }
 
 type IdNamePair struct {
-    Id uint64
-    Name string
+	Id   uint64
+	Name string
 }
 
 func popIdNamePair(tgt *IdNamePair, v game.EnumId) {
-    tgt.Name = v.Name()
-    tgt.Id = v.AsU64()
+	tgt.Name = v.Name()
+	tgt.Id = v.AsU64()
 }
 
 func serveAttacks(attacksP *[]*combat.Attack) http.Handler {
@@ -100,8 +100,8 @@ func writeAsJson(w http.ResponseWriter, v interface{}) {
 		w.Write([]byte(`{"error": `))
 		w.Write(errBytes)
 		w.Write([]byte{'}'})
-        return
+		return
 	}
-    w.Header().Set("Content-type", "application/json")
+	w.Header().Set("Content-type", "application/json")
 	w.Write(bytes)
 }
