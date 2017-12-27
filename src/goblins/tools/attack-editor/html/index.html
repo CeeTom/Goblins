@@ -37,67 +37,71 @@
             });
         }
 
-        function attackSelector(gameInfo, attacks) {
-            let select = document.createElement("select");
-            let newOption = document.createElement("option");
-            newOption.innerHTML = "[New Attack]";
-            select.appendChild(newOption);
-            for (let i = 0; i < attacks.length; i++) {
-                let option = document.createElement("option");
-                option.innerHTML = attacks[i].Name;
-                option.attack = attack;
-                select.appendChild(option);
+        class AttackSelector {
+            constructor(gameInfo, attacks) {
+                let select = document.createElement("select");
+                let newOption = document.createElement("option");
+                newOption.innerHTML = "[New Attack]";
+                select.appendChild(newOption);
+                for (let i = 0; i < attacks.length; i++) {
+                    let option = document.createElement("option");
+                    option.innerHTML = attacks[i].Name;
+                    option.attack = attack;
+                    select.appendChild(option);
+                }
+                this.element = select;
             }
-            return select;
         }
 
-        function attackDisplay(gameInfo, attack) {
-            let display = document.createElement("div");
+        class AttackDisplay {
+            constructor(gameInfo, attack) {
+                let display = document.createElement("div");
 
-            let id = document.createElement("span");
-            id.innerHTML = attack.Id.toString();
-            display.appendChild(id);
+                let id = document.createElement("span");
+                id.innerHTML = attack.Id.toString();
+                display.appendChild(id);
 
-            let name = document.createElement("input");
-            name.type = "text";
-            name.value = attack.Name;
-            display.appendChild(name);
+                let name = document.createElement("input");
+                name.type = "text";
+                name.value = attack.Name;
+                display.appendChild(name);
 
-            let strCost = document.createElement("input");
-            strCost.type = "number";
-            strCost.value = attack.StrengthCost.toString();
-            display.appendChild(strCost);
+                let strCost = document.createElement("input");
+                strCost.type = "number";
+                strCost.value = attack.StrengthCost.toString();
+                display.appendChild(strCost);
 
-            let magCost = document.createElement("input");
-            magCost.type = "number";
-            magCost.value = attack.MagicCost.toString();
-            display.appendChild(magCost);
+                let magCost = document.createElement("input");
+                magCost.type = "number";
+                magCost.value = attack.MagicCost.toString();
+                display.appendChild(magCost);
 
-            let dmgs = new DamageList(gameInfo, attack.Damages);
-            display.appendChild(dmgs.element);
+                let dmgs = new DamageList(gameInfo, attack.Damages);
+                display.appendChild(dmgs.element);
 
-            let selfDmgs = new DamageList(gameInfo, attack.SelfDamages);
-            display.appendChild(selfDmgs.element);
+                let selfDmgs = new DamageList(gameInfo, attack.SelfDamages);
+                display.appendChild(selfDmgs.element);
 
-            let saveButton = document.createElement("button");
-            button.innerHTML = "Save";
-            display.appendChild(saveButton);
+                let saveButton = document.createElement("button");
+                button.innerHTML = "Save";
+                display.appendChild(saveButton);
 
-            return { element: display };
+                this.element = display;
+            }
         }
 
         class DamageLi extends Eventer {
             constructor(gameInfo, damage) {
                 let li = document.createElement("li");
-                let selector = damageSelector(gameInfo, damages[i]);
+                let editor = new DamageEditor(gameInfo, damages);
                 let deleteButton = document.createElement("button");
                 deleteButton.innerHTML = "Remove";
                 deleteButton.addEventListener('click',
-                    () => this.dispatchEvent('item-removed', selector));
-                li.appendChild(selector.element);
+                    () => this.dispatchEvent('removed', editor));
+                li.appendChild(editor.element);
                 li.appendChild(deleteButton);
 
-                this.selector = selector;
+                this.editor = editor;
                 this.element = li;
             }
         }
@@ -106,11 +110,16 @@
             addDamage(damage) {
                 let li = new DamageLi(this.gameInfo, damage);
                 this.currDamages.push(li);
-                this.element.insertBefore(li, this.addLi);
+                this.element.insertBefore(li.element, this.addLi);
+                li.addEventListener('removed', function () {
+                    this.currDamages =
+                        this.currDamages.filter(item => item != li);
+                    this.element.removeChild(li.element);
+                });
             }
 
             asDamages() {
-                return this.currDamages.map(v => v.selector.asDamage());
+                return this.currDamages.map(v => v.editor.asDamage());
             }
 
             constructor(gameInfo, damages) {
@@ -121,12 +130,12 @@
 
                 function newDamage() {
                     return {
-                        Type: 0,
+                        Type: 1,
                         Amount: 0,
                         Pierce: 0,
                         Statuses: [],
                         ScalingFunc: 0,
-                        ScalingStat: 0,
+                        ScalingStat: 2,
                         ScalingMulti: 0,
                         Variance: 0,
                     };
@@ -146,31 +155,192 @@
             }
         }
 
-        function damageSelector(gameInfo, damage) {
+        class DamageEditor {
+            constructor(gameInfo, damage) {
+                this.element = document.createElement("div");
 
-            return {
-                element: null,
-                asDamage: () => null,
-            };
+                this.type =
+                    new IdNamePairSelector(gameInfo.damageTypes, damage.Type);
+                this.element.appendChild(type.element);
+
+                this.amount = document.createElement("input");
+                this.amount.type = "number";
+                this.amount.value = damage.Amount;
+                this.element.appendChild(this.amount);
+
+                this.pierce = document.createElement("input");
+                this.pierce.type = "number";
+                this.pierce.value = damage.Pierce;
+                this.element.appendChild(this.pierce);
+
+                this.scalingStat =
+                    new IdNamePairSelector(gameInfo.scalingStats,
+                        damage.ScalingStat);
+                this.element.appendChild(this.scalingStat.element);
+
+                this.scalingFunc =
+                    new IdNamePairSelector(gameInfo.scalingFuncs,
+                        damage.ScalingFunc);
+                this.element.appendChild(this.scalingFunc.element);
+
+                this.scalingMulti = document.createElement("input");
+                this.scalingMulti.type = "number";
+                this.scalingMulti.value = damage.ScalingMulti;
+                this.element.appendChild(this.scalingMulti);
+
+                this.variance = document.createElement("input");
+                this.variance.type = "number";
+                this.variance.value = damage.Variance;
+                this.element.appendChild(this.variance);
+
+                this.statuses = new StatusList(damage.Statuses);
+                this.element.append(this.statuses.element);
+            }
+
+            asDamage() {
+                return {
+                    Type: this.type.asId(),
+                    Amount: this.amount.value|0,
+                    Pierce: parseFloat(this.pierce.value),
+                    ScalingStat: this.scalingStat.asId(),
+                    ScalingFunc: this.scalingFunc.asId(),
+                    ScalingMulti: parseFloat(this.scalingMulti.value),
+                    Variance: parseFloat(this.variance.value),
+                    Statuses: this.statuses.asStatuses(),
+                };
+            }
         }
 
-        function statusList(gameInfo, statuses) {
+        class StatusLi extends Eventer {
+            constructor(gameInfo, status) {
+                let li = document.createElement("li");
+                let editor = new StatusEditor(gameInfo, status);
+                let deleteButton = document.createElement("button");
+                deleteButton.innerHTML = "Remove";
+                deleteButton.addEventListener('click',
+                    () => this.dispatchEvent('removed', editor));
+                li.appendChild(editor.element);
+                li.appendChild(deleteButton);
 
+                this.editor = editor;
+                this.element = li;
+            }
         }
 
-        function statusSelector(gameInfo, status) {
+        class StatusEditor {
+            constructor(gameInfo, status) {
+                this.element = document.createElement("div");
 
+                this.statusType =
+                    new IdNamePairSelector(gameInfo.statuses, status.Status);
+                this.element.appendChild(this.statusType.element);
+
+                this.statusProb = document.createElement("input");
+                this.statusProb.type = "number";
+                this.statusProb.value = status.Probability;
+                this.element.appendChild(this.statusProb);
+            }
+
+            asStatus() {
+                return {
+                    Status: this.statusType.asId(),
+                    Probability: parseFloat(this.statusProb.value),
+                };
+            }
         }
 
-        function scalingStatSelector(gameInfo, stat) {
+        class StatusList {
+            addStatus(status) {
+                let li = new StatusLi(this.gameInfo, status);
+                this.currStatuses.push(li);
+                this.element.insertBefore(li.element, this.addLi);
+                li.addEventListener('removed', function () {
+                    this.currStatuses =
+                        this.currStatuses.filter(item => item != li);
+                    this.element.removeChild(li.element);
+                });
+            }
 
+            asStatuses() {
+                return this.currStatuses.map(v => v.editor.asStatus());
+            }
+
+            constructor(gameInfo, statuses) {
+                this.gameInfo = gameInfo;
+                this.currStatuses = [];
+                this.element = document.createElement("ul");
+                this.addLi = document.createElement("li");
+
+                function newStatus() {
+                    return {
+                        Status: 0,
+                        Probability: 0,
+                    };
+                }
+
+                let addButton = document.createElement("button");
+                addButton.innerHTML = "Add Status";
+
+                addButton.addEventListener("click",
+                    () => this.addStatus(newStatus()));
+
+                this.addLi.appendChild(addButton);
+                this.element.appendChild(this.addLi);
+
+                for (let i = 0; i < statuses.length; i++)
+                    this.addStatuses(statuses[i]);
+            }
         }
 
-        function scalingFuncSelector(gameInfo, scaleF) {
+        class IdNamePairSelector {
+            constructor(all, curr) {
+                this.element = document.createElement("select");
+                for (let id in all) {
+                    let opt = document.createElement("option");
+                    opt.value = all[id];
+                    opt.pairId = id;
+                    opt.selected = id == curr;
+                    this.element.appendChild(opt);
+                }
+            }
 
+            asId() {
+                for (let opt in this.element)
+                    if (opt.selected)
+                        return opt.pairId;
+            }
         }
 
         function populateInterface() {
+            function fillIdNamePairs(dict, pairs) {
+                for (let idx = 0; idx < pairs.length; idx++)
+                    dict[pairs[idx].Id] = pairs[idx].Name;
+            }
+            let gameInfo = {
+                damageTypes: {},
+                statuses: {},
+                scalingFuncs: {},
+                stats: {},
+            };
+            loadIdNamePair("/damageTypes")
+            .then(function (types) {
+                fillIdNamePairs(gameInfo.damageTypes, types);
+                return loadIdNamePair("/statuses");
+            })
+            .then(function (statuses) {
+                fillIdNamePairs(gameInfo.statuses, statuses);
+                return loadIdNamePair("/scalingFuncs");
+            })
+            .then (function (scalingFuncs) {
+                fillIdNamePairs(gameInfo.scalingFuncs, scalingFuncs);
+                return loadIdNamePair("/stats");
+            })
+            .then(function (stats) {
+                fillIdNamePairs(gameInfo.stats, stats);
+            },
+            function(err) {
+                console.log(err);
+            });
         }
     </script>
 </head>
