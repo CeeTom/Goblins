@@ -7,3 +7,4 @@ Trait Ideas:
     * Stalwart: better def gains, worse agi gains
     * Student: better stat gains, reduced combat damage
     * Unpredictable: modifers change ?slightly? each training
+    * Temper: chance to gain anger status when hit
