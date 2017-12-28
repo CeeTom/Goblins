@@ -9,6 +9,7 @@ import (
 	"goblins/game/dataio"
 	"net/http"
 	"os"
+	"path"
 )
 
 func main() {
@@ -27,6 +28,7 @@ func main() {
 	attacksP := &attacks
 
 	http.Handle("/attacks", serveAttacks(attacksP))
+    http.Handle("/saveAttack", saveAttack(*tgtDir, attacksP))
 	http.Handle("/stats", http.HandlerFunc(serveStats))
 	http.Handle("/scalingFuncs", http.HandlerFunc(serveScalingFuncs))
 	http.Handle("/damageTypes", http.HandlerFunc(serveDamageTypes))
@@ -49,6 +51,46 @@ type IdNamePair struct {
 func popIdNamePair(tgt *IdNamePair, v game.EnumId) {
 	tgt.Name = v.Name()
 	tgt.Id = v.AsU64()
+}
+
+func saveAttack(tgtDir string, attacksP *[]*combat.Attack) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			w.WriteHeader(405)
+			return
+		}
+		var attack combat.Attack
+		dec := json.NewDecoder(r.Body)
+		err := dec.Decode(&attack)
+		if err != nil {
+			w.WriteHeader(400)
+			writeAsJson(w, err.Error())
+			return
+		}
+		fname := fmt.Sprintf("%d.atk", attack.Id)
+		fpath := path.Join(tgtDir, fname)
+		fw, err := os.Create(fpath)
+		if err != nil {
+			w.WriteHeader(500)
+			writeAsJson(w, err.Error())
+			return
+		}
+		defer fw.Close()
+		err = dataio.WriteAttack(fw, &attack)
+		if err != nil {
+			w.WriteHeader(500)
+			writeAsJson(w, err.Error())
+			return
+		}
+        idx := int(attack.Id)
+        if idx >= len(*attacksP) {
+            newAttacks := make([]*combat.Attack, idx+1)
+            copy(newAttacks, *attacksP)
+            *attacksP = newAttacks
+        }
+        (*attacksP)[idx] = &attack
+		writeAsJson(w, true)
+	})
 }
 
 func serveAttacks(attacksP *[]*combat.Attack) http.Handler {

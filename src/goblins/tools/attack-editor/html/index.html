@@ -30,14 +30,18 @@
             }
         }
 
-        function loadJson(endPoint) {
+        function xhrPromise(method, endPoint, body) {
             return new Promise(function(res, rej) {
                 let xhr = new XMLHttpRequest();
-                xhr.onload = () => { res(JSON.parse(xhr.responseText)); }
+                xhr.onload = () => { res(xhr.responseText); }
                 xhr.onerror = () => { rej(xhr.responseText); }
-                xhr.open("GET", endPoint);
-                xhr.send();
-            });
+                xhr.open(method, endPoint);
+                xhr.send(body);
+            }); 
+        }
+
+        function loadJson(endPoint) {
+            return xhrPromise("GET", endPoint, "").then(JSON.parse);
         }
 
         class AttackSelector {
@@ -52,16 +56,16 @@
                 newOption.innerHTML = "[New Attack]";
                 select.appendChild(emptyOption);
                 select.appendChild(newOption);
-                for (let i = 0; i < attacks.length; i++) {
+                for (let i in attacks) {
                     let option = document.createElement("option");
                     option.innerHTML = attacks[i].Name;
-                    option.attack = attack;
+                    option.value = i;
                     select.appendChild(option);
                 }
                 select.addEventListener('change', ev => {
                     if (ev.target.value == -1)
                         return;
-                    let attack = ev.target.attack;
+                    let attack = attacks[ev.target.value];
                     if (!attack) {
                         let atkId = 0;
                         for (let idx in attacks)
@@ -77,6 +81,19 @@
                         };
                     }
                     let display = new AttackDisplay(gameInfo, attack);
+                    display.addEventListener('save', attack => {
+                        attacks[attack.Id] = attack;
+                        if (ev.target.attack) {
+                            ev.target.value = attack.Id;
+                            ev.target.innerHTML = attack.Name;
+                        } else {
+                            let option = document.createElement("option");
+                            option.innerHTML = attack.Name;
+                            option.value = attack.Id;
+                            select.appendChild(option);
+                            option.selected = true;
+                        }
+                    });
                     attackContainer.innerHTML = "";
                     attackContainer.appendChild(display.element);
                 });
@@ -87,8 +104,9 @@
             }
         }
 
-        class AttackDisplay {
+        class AttackDisplay extends Eventer {
             constructor(gameInfo, attack) {
+                super();
                 let display = document.createElement("div");
 
                 let id = document.createElement("span");
@@ -118,6 +136,23 @@
 
                 let saveButton = document.createElement("button");
                 saveButton.innerHTML = "Save";
+                saveButton.addEventListener('click', () => {
+                    let toSave = {
+                        Id: attack.Id,
+                        Name: name.value,
+                        StrengthCost: strCost.asInt(),
+                        MagicCost: magCost.asInt(),
+                        Damages: dmgs.asDamages(),
+                        SelfDamages: selfDmgs.asDamages(),
+                    };
+                    xhrPromise("POST", "saveAttack",
+                        JSON.stringify(toSave)).then(() => {
+                            this.dispatchEvent('save', toSave);
+                        }, err => {
+                            alert("couldn't save");
+                            console.log(err);
+                        });
+                });
                 display.appendChild(saveButton);
 
                 this.element = display;
@@ -326,7 +361,7 @@
                 this.element.appendChild(this.addLi);
 
                 for (let i = 0; i < statuses.length; i++)
-                    this.addStatuses(statuses[i]);
+                    this.addStatus(statuses[i]);
             }
         }
 
@@ -337,16 +372,16 @@
                     let opt = document.createElement("option");
                     opt.value = id;
                     opt.innerHTML = all[id];
-                    opt.pairId = id;
                     opt.selected = id == curr;
                     this.element.appendChild(opt);
                 }
             }
 
             asId() {
-                for (let opt in this.element)
-                    if (opt.selected)
-                        return opt.pairId;
+                let options = this.element.getElementsByTagName("option");
+                for (let idx in options)
+                    if (options[idx].selected)
+                        return options[idx].value|0;
             }
         }
 
