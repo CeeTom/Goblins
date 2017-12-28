@@ -28,7 +28,7 @@ func main() {
 	attacksP := &attacks
 
 	http.Handle("/attacks", serveAttacks(attacksP))
-    http.Handle("/saveAttack", saveAttack(*tgtDir, attacksP))
+	http.Handle("/saveAttack", saveAttack(*tgtDir, attacksP))
 	http.Handle("/stats", http.HandlerFunc(serveStats))
 	http.Handle("/scalingFuncs", http.HandlerFunc(serveScalingFuncs))
 	http.Handle("/damageTypes", http.HandlerFunc(serveDamageTypes))
@@ -82,13 +82,13 @@ func saveAttack(tgtDir string, attacksP *[]*combat.Attack) http.Handler {
 			writeAsJson(w, err.Error())
 			return
 		}
-        idx := int(attack.Id)
-        if idx >= len(*attacksP) {
-            newAttacks := make([]*combat.Attack, idx+1)
-            copy(newAttacks, *attacksP)
-            *attacksP = newAttacks
-        }
-        (*attacksP)[idx] = &attack
+		idx := int(attack.Id)
+		if idx >= len(*attacksP) {
+			newAttacks := make([]*combat.Attack, idx+1)
+			copy(newAttacks, *attacksP)
+			*attacksP = newAttacks
+		}
+		(*attacksP)[idx] = &attack
 		writeAsJson(w, true)
 	})
 }

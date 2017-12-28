@@ -8,7 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-    "path"
+	"path"
 	"strings"
 )
 
@@ -52,7 +52,7 @@ func ReadAllAttacks(dirname string) ([]*combat.Attack, error) {
 						ret[idx].Name, atk.Name, idx)
 					return nil, errors.New(msg)
 				}
-                ret[idx] = atk
+				ret[idx] = atk
 			}
 		}
 	}
