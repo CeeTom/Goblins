@@ -17,3 +17,10 @@ Combat Damage:
       effective those resistances are.
     * Attacks may also have a set of probabilities to inflict corresponding
       statuses.
+
+Scaling Functions:
+
+    * Zero        = amount
+    * Linear      = amount + multi * stat
+    * Exponential = amount + sign(multi) * (stat/200)^(abs(multi))
+    * Logarithmic = amount + sign(multi) * (stat)^(abs(1/multi))
