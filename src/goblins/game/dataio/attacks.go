@@ -8,11 +8,12 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+    "path"
 	"strings"
 )
 
 // "ATTACK" 0x00 0x00
-const attackHeader = 0x0000756765848465
+const attackHeader = 0x00004B4341545441
 
 func ReadAllAttacks(dirname string) ([]*combat.Attack, error) {
 	ret := make([]*combat.Attack, 0, 64)
@@ -25,7 +26,7 @@ func ReadAllAttacks(dirname string) ([]*combat.Attack, error) {
 	for _, fileInfo := range files {
 		// skip directories
 		if !fileInfo.IsDir() {
-			name := fileInfo.Name()
+			name := path.Join(dirname, fileInfo.Name())
 			if strings.HasSuffix(name, ".atk") {
 				file, err := os.Open(name)
 				if err != nil {
@@ -51,6 +52,7 @@ func ReadAllAttacks(dirname string) ([]*combat.Attack, error) {
 						ret[idx].Name, atk.Name, idx)
 					return nil, errors.New(msg)
 				}
+                ret[idx] = atk
 			}
 		}
 	}
