@@ -9,7 +9,7 @@ import (
 )
 
 // "BREED " 0x00 0x00
-const breedHeader = 0x0000326869698266
+const breedHeader = 0x0000204445455242
 
 func ReadBreed(r io.Reader) (*game.Breed, error) {
 	ret := new(game.Breed)
