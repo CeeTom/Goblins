@@ -41,7 +41,11 @@ func ReadAllAttacks(dirname string) ([]*combat.Attack, error) {
 				idx := int(atk.Id)
 				if idx >= len(ret) {
 					if idx >= cap(ret) {
-						nret := make([]*combat.Attack, len(ret), cap(ret)*2)
+						newCap := cap(ret) * 2
+						if idx >= newCap {
+							newCap = idx + 1
+						}
+						nret := make([]*combat.Attack, len(ret), newCap)
 						copy(nret, ret)
 						ret = nret
 					}
