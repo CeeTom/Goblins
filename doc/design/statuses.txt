@@ -1,0 +1,8 @@
+Status Ideas:
+
+    * Sleep: can't move or attack until hit
+    * Stuck: can't move
+    * Angry: deal more damage, take more damage
+    * Charmed: deal less damage until hit
+    * Stoic: deal less damage, take less damage
+    * Poised: ???
