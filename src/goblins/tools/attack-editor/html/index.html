@@ -22,26 +22,35 @@
             }
 
             dispatchEvent(name, o) {
-                if (this.listeners[name])
-                    for (let f in this.listeners[name])
-                        f(o);
+                let toCall = this.listeners[name];
+                if (toCall)
+                    for (let idx in toCall)
+                        toCall[idx](o);
                 return true;
             }
         }
 
-        function loadIdNamePairs(endPoint) {
+        function loadJson(endPoint) {
             return new Promise(function(res, rej) {
                 let xhr = new XMLHttpRequest();
                 xhr.onload = () => { res(JSON.parse(xhr.responseText)); }
                 xhr.onerror = () => { rej(xhr.responseText); }
+                xhr.open("GET", endPoint);
+                xhr.send();
             });
         }
 
         class AttackSelector {
             constructor(gameInfo, attacks) {
+                let container = document.createElement("div");
+                let attackContainer = document.createElement("div");
                 let select = document.createElement("select");
+                let emptyOption = document.createElement("option");
+                emptyOption.innerHTML = "";
+                emptyOption.value = -1;
                 let newOption = document.createElement("option");
                 newOption.innerHTML = "[New Attack]";
+                select.appendChild(emptyOption);
                 select.appendChild(newOption);
                 for (let i = 0; i < attacks.length; i++) {
                     let option = document.createElement("option");
@@ -49,7 +58,32 @@
                     option.attack = attack;
                     select.appendChild(option);
                 }
-                this.element = select;
+                select.addEventListener('change', ev => {
+                    if (ev.target.value == -1)
+                        return;
+                    let attack = ev.target.attack;
+                    if (!attack) {
+                        let atkId = 0;
+                        for (let idx in attacks)
+                            if (attacks[idx].Id >= atkId)
+                                atkId = attacks[idx].Id + 1;
+                        attack = {
+                            Id: atkId,
+                            Name: "New attack",
+                            StrengthCost: 0,
+                            MagicCost: 0,
+                            Damages: [],
+                            SelfDamages: [],
+                        };
+                    }
+                    let display = new AttackDisplay(gameInfo, attack);
+                    attackContainer.innerHTML = "";
+                    attackContainer.appendChild(display.element);
+                });
+
+                container.appendChild(select);
+                container.appendChild(attackContainer);
+                this.element = container;
             }
         }
 
@@ -66,24 +100,24 @@
                 name.value = attack.Name;
                 display.appendChild(name);
 
-                let strCost = document.createElement("input");
-                strCost.type = "number";
-                strCost.value = attack.StrengthCost.toString();
-                display.appendChild(strCost);
+                let strCost = new NumberInput(attack.StrengthCost);
+                display.appendChild(
+                    new Labeled("Str Cost: ", strCost).element);
 
-                let magCost = document.createElement("input");
-                magCost.type = "number";
-                magCost.value = attack.MagicCost.toString();
-                display.appendChild(magCost);
+                let magCost = new NumberInput(attack.MagicCost);
+                display.appendChild(
+                    new Labeled("Mag Cost: ", magCost).element);
 
                 let dmgs = new DamageList(gameInfo, attack.Damages);
-                display.appendChild(dmgs.element);
+                display.appendChild(
+                    new Labeled("Damages: ", dmgs).element);
 
                 let selfDmgs = new DamageList(gameInfo, attack.SelfDamages);
-                display.appendChild(selfDmgs.element);
+                display.appendChild(
+                    new Labeled("Self Damages: ", selfDmgs).element);
 
                 let saveButton = document.createElement("button");
-                button.innerHTML = "Save";
+                saveButton.innerHTML = "Save";
                 display.appendChild(saveButton);
 
                 this.element = display;
@@ -92,10 +126,11 @@
 
         class DamageLi extends Eventer {
             constructor(gameInfo, damage) {
+                super();
                 let li = document.createElement("li");
-                let editor = new DamageEditor(gameInfo, damages);
+                let editor = new DamageEditor(gameInfo, damage);
                 let deleteButton = document.createElement("button");
-                deleteButton.innerHTML = "Remove";
+                deleteButton.innerHTML = "Remove Damage";
                 deleteButton.addEventListener('click',
                     () => this.dispatchEvent('removed', editor));
                 li.appendChild(editor.element);
@@ -111,7 +146,7 @@
                 let li = new DamageLi(this.gameInfo, damage);
                 this.currDamages.push(li);
                 this.element.insertBefore(li.element, this.addLi);
-                li.addEventListener('removed', function () {
+                li.addEventListener('removed', () => {
                     this.currDamages =
                         this.currDamages.filter(item => item != li);
                     this.element.removeChild(li.element);
@@ -159,53 +194,54 @@
             constructor(gameInfo, damage) {
                 this.element = document.createElement("div");
 
+                let amountDiv = document.createElement("div");
+
                 this.type =
                     new IdNamePairSelector(gameInfo.damageTypes, damage.Type);
-                this.element.appendChild(type.element);
+                amountDiv.appendChild(this.type.element);
 
-                this.amount = document.createElement("input");
-                this.amount.type = "number";
-                this.amount.value = damage.Amount;
-                this.element.appendChild(this.amount);
+                this.amount = new NumberInput(damage.Amount);
+                amountDiv.appendChild(this.amount.element);
 
-                this.pierce = document.createElement("input");
-                this.pierce.type = "number";
-                this.pierce.value = damage.Pierce;
-                this.element.appendChild(this.pierce);
+                this.element.appendChild(amountDiv);
+
+                this.pierce = new NumberInput(damage.Pierce);
+                this.element.appendChild(
+                    new Labeled("Pierce: ", this.pierce).element);
 
                 this.scalingStat =
-                    new IdNamePairSelector(gameInfo.scalingStats,
+                    new IdNamePairSelector(gameInfo.stats,
                         damage.ScalingStat);
-                this.element.appendChild(this.scalingStat.element);
+                this.element.appendChild(
+                    new Labeled("Scaling Stat: ", this.scalingStat).element);
 
                 this.scalingFunc =
                     new IdNamePairSelector(gameInfo.scalingFuncs,
                         damage.ScalingFunc);
-                this.element.appendChild(this.scalingFunc.element);
+                this.element.appendChild(
+                    new Labeled("Scaling Func: ", this.scalingFunc).element);
 
-                this.scalingMulti = document.createElement("input");
-                this.scalingMulti.type = "number";
-                this.scalingMulti.value = damage.ScalingMulti;
-                this.element.appendChild(this.scalingMulti);
+                this.scalingMulti = new NumberInput(damage.ScalingMulti);
+                this.element.appendChild(
+                    new Labeled("Scaling Multi: ", this.scalingMulti).element);
 
-                this.variance = document.createElement("input");
-                this.variance.type = "number";
-                this.variance.value = damage.Variance;
-                this.element.appendChild(this.variance);
+                this.variance = new NumberInput(damage.Variance);
+                this.element.appendChild(
+                    new Labeled("Variance: ", this.variance).element);
 
-                this.statuses = new StatusList(damage.Statuses);
+                this.statuses = new StatusList(gameInfo, damage.Statuses);
                 this.element.append(this.statuses.element);
             }
 
             asDamage() {
                 return {
                     Type: this.type.asId(),
-                    Amount: this.amount.value|0,
-                    Pierce: parseFloat(this.pierce.value),
+                    Amount: this.amount.asInt(),
+                    Pierce: this.pierce.asFloat(),
                     ScalingStat: this.scalingStat.asId(),
                     ScalingFunc: this.scalingFunc.asId(),
-                    ScalingMulti: parseFloat(this.scalingMulti.value),
-                    Variance: parseFloat(this.variance.value),
+                    ScalingMulti: this.scalingMulti.asFloat(),
+                    Variance: this.variance.asFloat(),
                     Statuses: this.statuses.asStatuses(),
                 };
             }
@@ -213,6 +249,7 @@
 
         class StatusLi extends Eventer {
             constructor(gameInfo, status) {
+                super();
                 let li = document.createElement("li");
                 let editor = new StatusEditor(gameInfo, status);
                 let deleteButton = document.createElement("button");
@@ -230,21 +267,22 @@
         class StatusEditor {
             constructor(gameInfo, status) {
                 this.element = document.createElement("div");
-
+                this.element.style.display = "inline-block";
                 this.statusType =
                     new IdNamePairSelector(gameInfo.statuses, status.Status);
                 this.element.appendChild(this.statusType.element);
 
-                this.statusProb = document.createElement("input");
-                this.statusProb.type = "number";
-                this.statusProb.value = status.Probability;
-                this.element.appendChild(this.statusProb);
+                this.statusProb = new NumberInput(status.Probability);
+                this.element.appendChild(
+                    new Labeled("Probability: ",
+                        this.statusProb,
+                        {display: "inline-block"}).element);
             }
 
             asStatus() {
                 return {
                     Status: this.statusType.asId(),
-                    Probability: parseFloat(this.statusProb.value),
+                    Probability: this.statusProb.asFloat(),
                 };
             }
         }
@@ -254,7 +292,7 @@
                 let li = new StatusLi(this.gameInfo, status);
                 this.currStatuses.push(li);
                 this.element.insertBefore(li.element, this.addLi);
-                li.addEventListener('removed', function () {
+                li.addEventListener('removed', () => {
                     this.currStatuses =
                         this.currStatuses.filter(item => item != li);
                     this.element.removeChild(li.element);
@@ -297,7 +335,8 @@
                 this.element = document.createElement("select");
                 for (let id in all) {
                     let opt = document.createElement("option");
-                    opt.value = all[id];
+                    opt.value = id;
+                    opt.innerHTML = all[id];
                     opt.pairId = id;
                     opt.selected = id == curr;
                     this.element.appendChild(opt);
@@ -311,7 +350,42 @@
             }
         }
 
-        function populateInterface() {
+        function applyStyle(elem, style) {
+            if (style)
+                for (let key in style)
+                    elem.style[key] = style[key];
+        }
+
+        class NumberInput {
+            constructor(value) {
+                this.element = document.createElement("input");
+                this.element.type = "number";
+                this.element.step = "any";
+                this.element.value = value;
+            }
+
+            asFloat() {
+                return parseFloat(this.element.value);
+            }
+
+            asInt() {
+                return this.element.value|0;
+            }
+        }
+
+        class Labeled {
+            constructor(label, comp, style, spanStyle) {
+                this.element = document.createElement("div");
+                let span = document.createElement("span");
+                span.innerHTML = label;
+                applyStyle(span, spanStyle);
+                applyStyle(this.element, style);
+                this.element.appendChild(span);
+                this.element.appendChild(comp.element);
+            }
+        }
+
+        function loadGameInfo() {
             function fillIdNamePairs(dict, pairs) {
                 for (let idx = 0; idx < pairs.length; idx++)
                     dict[pairs[idx].Id] = pairs[idx].Name;
@@ -322,26 +396,36 @@
                 scalingFuncs: {},
                 stats: {},
             };
-            loadIdNamePair("/damageTypes")
-            .then(function (types) {
+            return loadJson("/damageTypes").then(function (types) {
                 fillIdNamePairs(gameInfo.damageTypes, types);
-                return loadIdNamePair("/statuses");
-            })
-            .then(function (statuses) {
+                return loadJson("/statuses");
+            }).then(function (statuses) {
                 fillIdNamePairs(gameInfo.statuses, statuses);
-                return loadIdNamePair("/scalingFuncs");
-            })
-            .then (function (scalingFuncs) {
+                return loadJson("/scalingFuncs");
+            }).then (function (scalingFuncs) {
                 fillIdNamePairs(gameInfo.scalingFuncs, scalingFuncs);
-                return loadIdNamePair("/stats");
-            })
-            .then(function (stats) {
+                return loadJson("/stats");
+            }).then(function (stats) {
                 fillIdNamePairs(gameInfo.stats, stats);
-            },
-            function(err) {
-                console.log(err);
+                return gameInfo;
             });
         }
+
+        function populateInterface() {
+            loadGameInfo().then(function (gameInfo) {
+                loadJson("/attacks").then(function (attacks) {
+                    let attackList = new AttackSelector(gameInfo, attacks);
+                    document.getElementById("editor")
+                            .appendChild(attackList.element);
+                }, function (err) {
+                    console.log("couldn't load attacks", err);
+                });
+            }, function (err) {
+                console.log("couldn't load gameinfo", err);
+            });
+        }
+
+        window.addEventListener("load", populateInterface);
     </script>
 </head>
 <body>
