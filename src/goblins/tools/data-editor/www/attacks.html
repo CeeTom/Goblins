@@ -1,108 +1,8 @@
 <!DOCTYPE html>
 <head>
+    <script type="text/javascript" src="editor.js"></script>
     <script type="text/javascript">
         "use strict";
-
-        class Eventer {
-            constructor() {
-                this.listeners = {};
-            }
-
-            addEventListener(name, f) {
-                if (!this.listeners[name])
-                    this.listeners[name] = [];
-                this.listeners[name].push(f);
-            }
-
-            removeEventListener(name, f) {
-                if (this.listeners[name]) {
-                    this.listeners[name] =
-                        this.listeners[name].filter(v => v != f);
-                }
-            }
-
-            dispatchEvent(name, o) {
-                let toCall = this.listeners[name];
-                if (toCall)
-                    for (let idx in toCall)
-                        toCall[idx](o);
-                return true;
-            }
-        }
-
-        function xhrPromise(method, endPoint, body) {
-            return new Promise(function(res, rej) {
-                let xhr = new XMLHttpRequest();
-                xhr.onload = () => { res(xhr.responseText); }
-                xhr.onerror = () => { rej(xhr.responseText); }
-                xhr.open(method, endPoint);
-                xhr.send(body);
-            }); 
-        }
-
-        function loadJson(endPoint) {
-            return xhrPromise("GET", endPoint, "").then(JSON.parse);
-        }
-
-        class AttackSelector {
-            constructor(gameInfo, attacks) {
-                let container = document.createElement("div");
-                let attackContainer = document.createElement("div");
-                let select = document.createElement("select");
-                let emptyOption = document.createElement("option");
-                emptyOption.innerHTML = "";
-                emptyOption.value = -1;
-                let newOption = document.createElement("option");
-                newOption.innerHTML = "[New Attack]";
-                select.appendChild(emptyOption);
-                select.appendChild(newOption);
-                for (let i in attacks) {
-                    let option = document.createElement("option");
-                    option.innerHTML = attacks[i].Name;
-                    option.value = i;
-                    select.appendChild(option);
-                }
-                select.addEventListener('change', ev => {
-                    if (ev.target.value == -1)
-                        return;
-                    let attack = attacks[ev.target.value];
-                    if (!attack) {
-                        let atkId = 0;
-                        for (let idx in attacks)
-                            if (attacks[idx].Id >= atkId)
-                                atkId = attacks[idx].Id + 1;
-                        attack = {
-                            Id: atkId,
-                            Name: "New attack",
-                            StrengthCost: 0,
-                            MagicCost: 0,
-                            Damages: [],
-                            SelfDamages: [],
-                        };
-                    }
-                    let display = new AttackDisplay(gameInfo, attack);
-                    display.addEventListener('save', attack => {
-                        attacks[attack.Id] = attack;
-                        if (ev.target.attack) {
-                            ev.target.value = attack.Id;
-                            ev.target.innerHTML = attack.Name;
-                        } else {
-                            let option = document.createElement("option");
-                            option.innerHTML = attack.Name;
-                            option.value = attack.Id;
-                            select.appendChild(option);
-                            option.selected = true;
-                        }
-                    });
-                    attackContainer.innerHTML = "";
-                    attackContainer.appendChild(display.element);
-                });
-
-                container.appendChild(select);
-                container.appendChild(attackContainer);
-                this.element = container;
-            }
-        }
 
         class AttackDisplay extends Eventer {
             constructor(gameInfo, attack) {
@@ -365,91 +265,22 @@
             }
         }
 
-        class IdNamePairSelector {
-            constructor(all, curr) {
-                this.element = document.createElement("select");
-                for (let id in all) {
-                    let opt = document.createElement("option");
-                    opt.value = id;
-                    opt.innerHTML = all[id];
-                    opt.selected = id == curr;
-                    this.element.appendChild(opt);
-                }
-            }
-
-            asId() {
-                let options = this.element.getElementsByTagName("option");
-                for (let idx in options)
-                    if (options[idx].selected)
-                        return options[idx].value|0;
-            }
-        }
-
-        function applyStyle(elem, style) {
-            if (style)
-                for (let key in style)
-                    elem.style[key] = style[key];
-        }
-
-        class NumberInput {
-            constructor(value) {
-                this.element = document.createElement("input");
-                this.element.type = "number";
-                this.element.step = "any";
-                this.element.value = value;
-            }
-
-            asFloat() {
-                return parseFloat(this.element.value);
-            }
-
-            asInt() {
-                return this.element.value|0;
-            }
-        }
-
-        class Labeled {
-            constructor(label, comp, style, spanStyle) {
-                this.element = document.createElement("div");
-                let span = document.createElement("span");
-                span.innerHTML = label;
-                applyStyle(span, spanStyle);
-                applyStyle(this.element, style);
-                this.element.appendChild(span);
-                this.element.appendChild(comp.element);
-            }
-        }
-
-        function loadGameInfo() {
-            function fillIdNamePairs(dict, pairs) {
-                for (let idx = 0; idx < pairs.length; idx++)
-                    dict[pairs[idx].Id] = pairs[idx].Name;
-            }
-            let gameInfo = {
-                damageTypes: {},
-                statuses: {},
-                scalingFuncs: {},
-                stats: {},
+        function emptyAttack(id) {
+            return {
+                Id: id,
+                Name: "New attack",
+                StrengthCost: 0,
+                MagicCost: 0,
+                Damages: [],
+                SelfDamages: [],
             };
-            return loadJson("/damageTypes").then(function (types) {
-                fillIdNamePairs(gameInfo.damageTypes, types);
-                return loadJson("/statuses");
-            }).then(function (statuses) {
-                fillIdNamePairs(gameInfo.statuses, statuses);
-                return loadJson("/scalingFuncs");
-            }).then (function (scalingFuncs) {
-                fillIdNamePairs(gameInfo.scalingFuncs, scalingFuncs);
-                return loadJson("/stats");
-            }).then(function (stats) {
-                fillIdNamePairs(gameInfo.stats, stats);
-                return gameInfo;
-            });
         }
 
         function populateInterface() {
             loadGameInfo().then(function (gameInfo) {
                 loadJson("/attacks").then(function (attacks) {
-                    let attackList = new AttackSelector(gameInfo, attacks);
+                    let attackList = new EditorSelector(gameInfo, attacks, 
+                        AttackDisplay, emptyAttack);
                     document.getElementById("editor")
                             .appendChild(attackList.element);
                 }, function (err) {

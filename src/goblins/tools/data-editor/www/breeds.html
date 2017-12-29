@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<head>
+    <script type="text/javascript" src="editor.js"></script>
+    <script type="text/javascript">
+        "use strict";
+
+        class BreedDisplay extends Eventer {
+            constructor (gameInfo, breed) {
+                super();
+                let display = document.createElement("div");
+
+                let id = document.createElement("span");
+                id.innerHTML = breed.Id.toString();
+                display.appendChild(id);
+
+                let name = document.createElement("input");
+                name.type = "text";
+                name.value = breed.Name;
+                display.appendChild(name);
+
+                let proclivities =
+                    new ProclivityTable(gameInfo, breed.ProclivityTable);
+                display.appendChild(proclivities.element);
+
+                let traits = new TraitTable(gameInfo, breed.TraitTable);
+                display.appendChild(traits.element);
+
+                let attacks =
+                    new AttackTable(gameInfo.attacks, breed.AttackTable);
+                display.appendChild(attacks.element);
+
+                let saveButton = document.createElement("button");
+                saveButton.innerHTML = "Save";
+                saveButton.addEventListener('click', () => {
+                    let toSave = {
+                        Id: breed.Id,
+                        Name: name.value,
+                        ProclivityTable: proclivities.asProclivities(),
+                        TraitTable: traits.asTraits(),
+                        AttackTable: attacks.asAttacks(),
+                    };
+                    xhrPromise("POST", "saveBreed",
+                        JSON.stringify(toSave)).then(() => {
+                            this.dispatchEvent('save', toSave);
+                        }, err => {
+                            alert("couldn't save");
+                            console.log(err);
+                        });
+                });
+                display.appendChild(saveButton);
+
+                this.element = display;
+            }
+        }
+
+        class TraitTable {
+            constructor(gameInfo, table) {
+                this.element = document.createElement("table");
+                this.inputs = [];
+                let nameRow = document.createElement("tr");
+                nameRow.appendChild(document.createElement("td"));
+                for (let i = 0; i < 3; i++) {
+                    let td = document.createElement("td");
+                    td.innerHTML = (i + 1).toString();
+                    nameRow.appendChild(td);
+                }
+                this.element.appendChild(nameRow);
+                for (let i = 0; i < 32; i++) {
+                    this.inputs[i] = [];
+                    let row = document.createElement("tr");
+                    colorRow(i, row);
+                    let label = document.createElement("td");
+                    label.innerHTML = (i + 1).toString();
+                    row.appendChild(label);
+                    for (let j = 0; j < 3; j++) {
+                        let td = document.createElement("td");
+                        let inp = new IdNamePairSelector(gameInfo.traits,
+                            table[j][i]);
+                        this.inputs[i][j] = inp;
+                        td.appendChild(inp.element);
+                        row.appendChild(td);
+                    }
+                    this.element.appendChild(row);
+                }
+            }
+
+            asTraits() {
+                let table = [];
+                for (let j = 0; j < 3; j++) {
+                    table[j] = [];
+                    for (let i = 0; i < 32; i++) {
+                        table[j][i] = this.inputs[i][j].asId();
+                    }
+                }
+                return table;
+            }
+        }
+
+        class ProclivityTable {
+            constructor(gameInfo, table) {
+                this.element = document.createElement("table");
+                this.gameInfo = gameInfo;
+                this.inputs = [];
+                let nameRow = document.createElement("tr");
+                nameRow.appendChild(document.createElement("td"));
+                for (let id in gameInfo.stats) {
+                    let td = document.createElement("td");
+                    td.innerHTML = gameInfo.stats[id];
+                    td.style.fontSize = "8px";
+                    nameRow.appendChild(td);
+                }
+                this.element.appendChild(nameRow);
+                for (let i = 0; i < 32; i++) {
+                    this.inputs[i] = [];
+                    let row = document.createElement("tr");
+                    colorRow(i, row);
+                    let label = document.createElement("td");
+                    label.innerHTML = (i + 1).toString();
+                    row.appendChild(label);
+                    for (let j = 0; j < 5; j++) {
+                        let td = document.createElement("td");
+                        let inp = new NumberInput(table[j][i]);
+                        this.inputs[i][j] = inp;
+                        inp.element.style.width = "50px";
+                        td.appendChild(inp.element);
+                        row.appendChild(td);
+                    }
+                    this.element.appendChild(row);
+                }
+            }
+
+            asProclivities() {
+                let table = [];
+                for (let j = 0; j < 5; j++) {
+                    table[j] = [];
+                    for (let i = 0; i < 32; i++) {
+                        table[j][i] = this.inputs[i][j].asFloat();
+                    }
+                }
+                return table;
+            }
+        }
+
+        class AttackTable {
+            constructor(allAttacks, currAttacks) {
+                this.element = document.createElement("table");
+                this.attacks = [];
+                let row = document.createElement("tr");
+                for (let i = 0; i < 4; i++) {
+                    let cell = document.createElement("td");
+                    this.attacks[i] =
+                        new IdNamePairSelector(allAttacks, currAttacks[i]);
+                    cell.appendChild(this.attacks[i].element);
+                    row.appendChild(cell);
+                }
+                this.element.appendChild(row);
+            }
+
+            asAttacks() {
+                return this.attacks.map(selector => selector.asId());
+            }
+        }
+
+        const rowColors = ["#0F9", "#3B8", "#686", "#953", "#C20", "#F00"];
+        function colorRow(n, tr) {
+            let b = 0;
+            if (n & 1)  b++;
+            if (n & 2)  b++;
+            if (n & 4)  b++;
+            if (n & 8)  b++;
+            if (n & 16) b++;
+            tr.style.backgroundColor = rowColors[b];
+        }
+
+        function newBreed(id) {
+            let proclivities = [];
+            let traits = [];
+            for (let i = 0; i < 5; i++) {
+                proclivities[i] = [];
+                for (let j = 0; j < 32; j++)
+                    proclivities[i][j] = 1.0;
+            }
+            for (let i = 0; i < 3; i++) {
+                traits[i] = [];
+                for (let j = 0; j < 32; j++)
+                    traits[i][j] = 0xFF;
+            }
+            return {
+                Id: id,
+                Name: "New Breed",
+                ProclivityTable: proclivities,
+                TraitTable: traits,
+                AttackTable: [0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF],
+            };
+        }
+        
+        function populateInterface() {
+            loadGameInfo().then(function (gameInfo) {
+                return loadJson("/attacks").then(function (attacks) {
+                    return loadJson("/breeds").then(function (breeds) {
+                        attacks.push({Id: 0xFFFF, Name: "No Attack"});
+                        gameInfo.attacks = {};
+                        for (let idx in attacks) {
+                            gameInfo.attacks[attacks[idx].Id] =
+                                attacks[idx].Name;
+                        }
+                        let breedList = new EditorSelector(gameInfo, breeds,
+                            BreedDisplay, newBreed);
+                        document.getElementById("editor")
+                                .appendChild(breedList.element);
+                    });
+                });
+            }, function (err) {
+                console.log("couldn't load gameinfo", err);
+            });
+        }
+
+        window.addEventListener("load", populateInterface);
+    </script>
+</head>
+<body>
+    <h1>Goblins: Breed Editor</h2>
+    <div id="editor"></div>
+</body>
+    

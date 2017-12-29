@@ -6,33 +6,37 @@ import (
 	"fmt"
 	"goblins/game"
 	"goblins/game/combat"
-	"goblins/game/dataio"
 	"net/http"
 	"os"
-	"path"
 )
 
 func main() {
 	webDir := flag.String("www", ".", "directory for static html files")
-	tgtDir := flag.String("dir", ".", "directory from which to read attacks")
+	atkDir := flag.String("atk", ".", "directory from which to read attacks")
+	brdDir := flag.String("brd", ".", "directory from which to read breeds")
 	host := flag.String("host", "127.0.0.1:8001",
 		"host:port to listen for ui connections")
 	flag.Parse()
 
-	attacks, err := dataio.ReadAllAttacks(*tgtDir)
+	attacks, err := LoadAttackList(*atkDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Couldn't read attacks from %s: %s\n", *tgtDir,
+		fmt.Fprintf(os.Stderr, "Couldn't read attacks from %s: %s\n", *atkDir,
 			err.Error())
 		os.Exit(1)
 	}
-	attacksP := &attacks
 
-	http.Handle("/attacks", serveAttacks(attacksP))
-	http.Handle("/saveAttack", saveAttack(*tgtDir, attacksP))
-	http.Handle("/stats", http.HandlerFunc(serveStats))
-	http.Handle("/scalingFuncs", http.HandlerFunc(serveScalingFuncs))
-	http.Handle("/damageTypes", http.HandlerFunc(serveDamageTypes))
-	http.Handle("/statuses", http.HandlerFunc(serveStatuses))
+	breeds, err := LoadBreedList(*brdDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Couldn't read breeds from %s: %s\n", *brdDir,
+			err.Error())
+		os.Exit(1)
+	}
+
+	http.Handle("/attacks", serveAttacks(attacks))
+	http.Handle("/saveAttack", saveAttack(*atkDir, attacks))
+	http.Handle("/breeds", serveBreeds(breeds))
+	http.Handle("/saveBreed", saveBreed(*brdDir, breeds))
+	http.Handle("/staticGameInfo", http.HandlerFunc(serveStaticGameInfo))
 	http.Handle("/", http.FileServer(http.Dir(*webDir)))
 
 	err = http.ListenAndServe(*host, nil)
@@ -48,87 +52,38 @@ type IdNamePair struct {
 	Name string
 }
 
+type StaticInfo struct {
+	Stats, ScalingFuncs, DamageTypes, Statuses, Traits []IdNamePair
+}
+
 func popIdNamePair(tgt *IdNamePair, v game.EnumId) {
 	tgt.Name = v.Name()
 	tgt.Id = v.AsU64()
 }
 
-func saveAttack(tgtDir string, attacksP *[]*combat.Attack) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
-			w.WriteHeader(405)
-			return
-		}
-		var attack combat.Attack
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&attack)
-		if err != nil {
-			w.WriteHeader(400)
-			writeAsJson(w, err.Error())
-			return
-		}
-		fname := fmt.Sprintf("%d.atk", attack.Id)
-		fpath := path.Join(tgtDir, fname)
-		fw, err := os.Create(fpath)
-		if err != nil {
-			w.WriteHeader(500)
-			writeAsJson(w, err.Error())
-			return
-		}
-		defer fw.Close()
-		err = dataio.WriteAttack(fw, &attack)
-		if err != nil {
-			w.WriteHeader(500)
-			writeAsJson(w, err.Error())
-			return
-		}
-		idx := int(attack.Id)
-		if idx >= len(*attacksP) {
-			newAttacks := make([]*combat.Attack, idx+1)
-			copy(newAttacks, *attacksP)
-			*attacksP = newAttacks
-		}
-		(*attacksP)[idx] = &attack
-		writeAsJson(w, true)
-	})
-}
-
-func serveAttacks(attacksP *[]*combat.Attack) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		writeAsJson(w, *attacksP)
-	})
-}
-
-func serveStats(w http.ResponseWriter, r *http.Request) {
-	arr := make([]IdNamePair, len(combat.AllStats))
+func serveStaticGameInfo(w http.ResponseWriter, r *http.Request) {
+	var toWrite StaticInfo
+	toWrite.Stats = make([]IdNamePair, len(combat.AllStats))
 	for i, v := range combat.AllStats {
-		popIdNamePair(&arr[i], v)
+		popIdNamePair(&toWrite.Stats[i], v)
 	}
-	writeAsJson(w, arr)
-}
-
-func serveScalingFuncs(w http.ResponseWriter, r *http.Request) {
-	arr := make([]IdNamePair, len(combat.AllScalingFuncs))
+	toWrite.ScalingFuncs = make([]IdNamePair, len(combat.AllScalingFuncs))
 	for i, v := range combat.AllScalingFuncs {
-		popIdNamePair(&arr[i], v)
+		popIdNamePair(&toWrite.ScalingFuncs[i], v)
 	}
-	writeAsJson(w, arr)
-}
-
-func serveDamageTypes(w http.ResponseWriter, r *http.Request) {
-	arr := make([]IdNamePair, len(combat.AllDamageTypes))
+	toWrite.DamageTypes = make([]IdNamePair, len(combat.AllDamageTypes))
 	for i, v := range combat.AllDamageTypes {
-		popIdNamePair(&arr[i], v)
+		popIdNamePair(&toWrite.DamageTypes[i], v)
 	}
-	writeAsJson(w, arr)
-}
-
-func serveStatuses(w http.ResponseWriter, r *http.Request) {
-	arr := make([]IdNamePair, len(combat.AllStatuses))
+	toWrite.Statuses = make([]IdNamePair, len(combat.AllStatuses))
 	for i, v := range combat.AllStatuses {
-		popIdNamePair(&arr[i], v)
+		popIdNamePair(&toWrite.Statuses[i], v)
 	}
-	writeAsJson(w, arr)
+	toWrite.Traits = make([]IdNamePair, len(game.AllTraits))
+	for i, v := range game.AllTraits {
+		popIdNamePair(&toWrite.Traits[i], v)
+	}
+	writeAsJson(w, &toWrite)
 }
 
 func writeAsJson(w http.ResponseWriter, v interface{}) {
