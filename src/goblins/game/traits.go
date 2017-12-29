@@ -2,37 +2,55 @@ package game
 
 type TraitId uint8
 
-var TraitNames = [...]string{
-	"",
-	"Trait#1",
-	"Trait#2",
-	"Trait#3",
-	"Trait#4",
-	"Trait#5",
-	"Trait#6",
-	"Trait#7",
-	"Trait#8",
-	"Trait#9",
-	"Trait#10",
-	"Trait#11",
-	"Trait#12",
-	"Trait#13",
-	"Trait#14",
-	"Trait#15",
-	"Trait#16",
-	"Trait#17",
-	"Trait#18",
-	"Trait#19",
-	"Trait#20",
-	"Trait#21",
-	"Trait#22",
-	"Trait#23",
-	"Trait#24",
-	"Trait#25",
-	"Trait#26",
-	"Trait#27",
-	"Trait#28",
-	"Trait#29",
-	"Trait#30",
-	"Trait#31",
+const (
+	IronWill = TraitId(iota)
+	Bookish
+	Brutish
+	Dextrous
+	Stalwart
+	Student
+	Unpredictable
+	Temper
+	NullTrait = 0xFF
+)
+
+var AllTraits = [...]TraitId{
+	IronWill,
+	Bookish,
+	Brutish,
+	Dextrous,
+	Stalwart,
+	Student,
+	Unpredictable,
+	Temper,
+	NullTrait,
+}
+
+func (t TraitId) AsU64() uint64 {
+	return uint64(t)
+}
+
+func (t TraitId) Name() string {
+	switch t {
+	case IronWill:
+		return "IronWill"
+	case Bookish:
+		return "Bookish"
+	case Brutish:
+		return "Brutish"
+	case Dextrous:
+		return "Dextrous"
+	case Stalwart:
+		return "Stalwart"
+	case Student:
+		return "Student"
+	case Unpredictable:
+		return "Unpredictable"
+	case Temper:
+		return "Temper"
+	case NullTrait:
+		return "No Trait"
+	default:
+		return "[Unknown Trait Id]"
+	}
 }
