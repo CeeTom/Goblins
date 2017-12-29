@@ -9,6 +9,7 @@ const (
 	MagicStrength
 	Vitality
 	MagicVitality
+	NullAttack = 0xFFFF
 )
 
 const (
