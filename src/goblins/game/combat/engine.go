@@ -176,6 +176,12 @@ func (f *Fighter) takeDamage(amount float32, multi float32,
 			vit := f.Monster.Attrs.Vitality.Value
 			// ~ 0.25/sqrt(1000) * sqrt(vit)
 			multi -= float32(0.008 * math.Sqrt(float64(vit)))
+
+			// iron will applies magic def to phys @ 20% effectiveness
+			if f.Monster.HasTrait(game.IronWill) {
+				mvit := f.Monster.Attrs.MagicVitality.Value
+				multi -= 0.2 * 0.65 / 1000 * float32(mvit)
+			}
 		} else if dmgType == MagicDamage {
 			mvit := f.Monster.Attrs.MagicVitality.Value
 			multi -= 0.65 / 1000 * float32(mvit)
