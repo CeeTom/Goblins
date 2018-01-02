@@ -3,8 +3,9 @@ Combat System Questions:
     * Mobile-Friendly?
     * Options:
 
-        * Turn-based grid combat a la tactics rpg
+        * Turn-based positional combat a la tactics rpg
         * Turn-based static combat a la jrpg
+        * Real-time static combat?
         * Real-time positional combat (networking?)
 
 Combat Damage:
@@ -24,3 +25,12 @@ Scaling Functions:
     * Linear      = amount + multi * stat
     * Exponential = amount + sign(multi) * (stat/200)^(abs(multi))
     * Logarithmic = amount + sign(multi) * (stat)^(abs(1/multi))
+
+Defense Scaling:
+
+    * Vitality:
+        Hp: 2 * Vitality
+        Phys Dmg Reduction: 0.25 / sqrt(1000) * sqrt(vitality)
+    * MagicVitality:
+        Hp: 150 / sqrt(1000) * sqrt(magicvitality)
+        Mag Dmg Reduction: 0.65 / 1000 * magicvitality
