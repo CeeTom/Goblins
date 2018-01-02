@@ -8,8 +8,6 @@ const (
 	Brutish
 	Dextrous
 	Stalwart
-	Student
-	Unpredictable
 	Temper
 	NullTrait = 0xFF
 )
@@ -20,8 +18,6 @@ var AllTraits = [...]TraitId{
 	Brutish,
 	Dextrous,
 	Stalwart,
-	Student,
-	Unpredictable,
 	Temper,
 	NullTrait,
 }
@@ -42,10 +38,6 @@ func (t TraitId) Name() string {
 		return "Dextrous"
 	case Stalwart:
 		return "Stalwart"
-	case Student:
-		return "Student"
-	case Unpredictable:
-		return "Unpredictable"
 	case Temper:
 		return "Temper"
 	case NullTrait:
