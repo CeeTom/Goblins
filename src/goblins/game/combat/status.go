@@ -4,7 +4,6 @@ type StatusId uint8
 
 const (
 	Sleep = StatusId(1 + iota)
-	Stuck
 	Angry
 	Charmed
 	Stoic
@@ -13,7 +12,6 @@ const (
 
 var AllStatuses = [...]StatusId{
 	Sleep,
-	Stuck,
 	Angry,
 	Charmed,
 	Stoic,
@@ -28,8 +26,6 @@ func (status StatusId) Name() string {
 	switch status {
 	case Sleep:
 		return "Sleep"
-	case Stuck:
-		return "Stuck"
 	case Angry:
 		return "Angry"
 	case Charmed:
