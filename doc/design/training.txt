@@ -3,4 +3,4 @@ Proclivities, how do they work?
     Current idea: Proclivities effect training by multiplying the stat gain
     according to this formula (where Proclivity is p):
         
-        Gain * (rand(0,1)/(2p+1) + (1 - 1/(2p+1)))
+        Gain * (1 + rand(0,1)/(p+1) - 1/(p+1))
