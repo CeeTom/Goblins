@@ -33,3 +33,20 @@ type Monster struct {
 		Fatigue   MonsterMood
 	}
 }
+
+func (m *Monster) Stat(stat StatId) *MonsterAttr {
+	switch stat {
+	case Agility:
+		return &m.Attrs.Agility
+	case Strength:
+		return &m.Attrs.Strength
+	case MagicStrength:
+		return &m.Attrs.MagicStrength
+	case Vitality:
+		return &m.Attrs.Vitality
+	case MagicVitality:
+		return &m.Attrs.MagicVitality
+	default:
+		return nil
+	}
+}

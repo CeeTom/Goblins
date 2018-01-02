@@ -1,14 +1,13 @@
 package combat
 
-type StatId uint8
+import (
+	"goblins/game"
+	"math"
+)
+
 type ScalingFuncId uint8
 
 const (
-	Agility = StatId(iota + 1)
-	Strength
-	MagicStrength
-	Vitality
-	MagicVitality
 	NullAttack = 0xFFFF
 )
 
@@ -19,14 +18,6 @@ const (
 	Logarithmic
 )
 
-var AllStats = [...]StatId{
-	Agility,
-	Strength,
-	MagicStrength,
-	Vitality,
-	MagicVitality,
-}
-
 var AllScalingFuncs = [...]ScalingFuncId{
 	Zero,
 	Linear,
@@ -34,24 +25,33 @@ var AllScalingFuncs = [...]ScalingFuncId{
 	Logarithmic,
 }
 
-func (stat StatId) AsU64() uint64 {
-	return uint64(stat)
-}
-
-func (stat StatId) Name() string {
-	switch stat {
-	case Agility:
-		return "Agility"
-	case Strength:
-		return "Strength"
-	case MagicStrength:
-		return "MagicStrength"
-	case Vitality:
-		return "Vitality"
-	case MagicVitality:
-		return "MagicVitality"
+func (scaleF ScalingFuncId) Scale(baseDmg int32, statValue uint16,
+	multi float32) float32 {
+	switch scaleF {
+	case Zero:
+		return float32(baseDmg)
+	case Linear:
+		return float32(baseDmg) + float32(statValue)*multi
+	case Exponential:
+		m64 := float64(multi)
+		v64 := float64(statValue)
+		sign := float64(1)
+		if m64 < 0 {
+			sign = -1
+			m64 *= -1
+		}
+		return float32(baseDmg) + float32(sign*math.Pow(v64/200, m64))
+	case Logarithmic:
+		m64 := float64(multi)
+		v64 := float64(statValue)
+		sign := float64(1)
+		if m64 < 0 {
+			sign = -1
+			m64 *= -1
+		}
+		return float32(baseDmg) + float32(sign*math.Pow(v64, 1/m64))
 	default:
-		return "[Unknown Stat Id]"
+		panic("bad scaling func")
 	}
 }
 
@@ -77,7 +77,7 @@ func (scaleF ScalingFuncId) Name() string {
 type DamageBasis struct {
 	Damage
 	ScalingFunc  ScalingFuncId
-	ScalingStat  StatId
+	ScalingStat  game.StatId
 	ScalingMulti float32
 	Variance     float32
 }
@@ -87,6 +87,7 @@ type Attack struct {
 	Name         string
 	StrengthCost int32
 	MagicCost    int32
+	CastTime     uint16
 	Damages      []DamageBasis
 	SelfDamages  []DamageBasis
 }

@@ -26,6 +26,10 @@
                 display.appendChild(
                     new Labeled("Mag Cost: ", magCost).element);
 
+                let castTime = new NumberInput(attack.CastTime);
+                display.appendChild(
+                    new Labeled("Cast Time: ", castTime).element);
+
                 let dmgs = new DamageList(gameInfo, attack.Damages);
                 display.appendChild(
                     new Labeled("Damages: ", dmgs).element);
@@ -42,6 +46,7 @@
                         Name: name.value,
                         StrengthCost: strCost.asInt(),
                         MagicCost: magCost.asInt(),
+                        CastTime: castTime.asInt(),
                         Damages: dmgs.asDamages(),
                         SelfDamages: selfDmgs.asDamages(),
                     };
@@ -212,12 +217,19 @@
                     new Labeled("Probability: ",
                         this.statusProb,
                         {display: "inline-block"}).element);
+
+                this.duration = new NumberInput(status.Duration);
+                this.element.appendChild(
+                    new Labeled("Duration: ",
+                        this.duration,
+                        {display: "inline-block"}).element);
             }
 
             asStatus() {
                 return {
                     Status: this.statusType.asId(),
                     Probability: this.statusProb.asFloat(),
+                    Duration: this.duration.asInt(),
                 };
             }
         }
@@ -271,6 +283,7 @@
                 Name: "New attack",
                 StrengthCost: 0,
                 MagicCost: 0,
+                CastTime: 0,
                 Damages: [],
                 SelfDamages: [],
             };

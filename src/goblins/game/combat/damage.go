@@ -31,8 +31,11 @@ type Damage struct {
 	Type     DamageTypeId
 	Amount   int32
 	Pierce   float32
-	Statuses []struct {
-		Status      StatusId
-		Probability float32
-	}
+	Statuses []StatusEffect
+}
+
+type StatusEffect struct {
+	Status      StatusId
+	Probability float32
+	Duration    uint16
 }

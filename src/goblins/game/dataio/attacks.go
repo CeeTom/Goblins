@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-// "ATTACK" 0x00 0x00
-const attackHeader = 0x00004B4341545441
+// "ATTACK" 0x01 0x00
+const attackHeader = 0x01004B4341545441
 
 func ReadAllAttacks(dirname string) ([]*combat.Attack, error) {
 	ret := make([]*combat.Attack, 0, 64)
@@ -88,6 +88,11 @@ func ReadAttack(r io.Reader) (*combat.Attack, error) {
 	err = binary.Read(r, little, &ret.MagicCost)
 	if err != nil {
 		return nil, errors.Wrap(err, "Couldn't read attack magic cost")
+	}
+
+	err = binary.Read(r, little, &ret.CastTime)
+	if err != nil {
+		return nil, errors.Wrap(err, "Couldn't read attack cast time")
 	}
 
 	dmgCount, err := readU16(r)
@@ -170,11 +175,7 @@ func readDamageBasis(r io.Reader, basis *combat.DamageBasis) error {
 		return errors.Wrap(err, "Couldn't read damage status count")
 	}
 
-	basis.Statuses =
-		make([]struct {
-			Status      combat.StatusId
-			Probability float32
-		}, int(statusCount))
+	basis.Statuses = make([]combat.StatusEffect, int(statusCount))
 
 	for i := 0; i < int(statusCount); i++ {
 		err = binary.Read(r, little, &basis.Statuses[i])
@@ -205,6 +206,11 @@ func WriteAttack(w io.Writer, attack *combat.Attack) error {
 	err = binary.Write(w, little, attack.MagicCost)
 	if err != nil {
 		return errors.Wrap(err, "Couldn't write attack magic cost")
+	}
+
+	err = binary.Write(w, little, attack.CastTime)
+	if err != nil {
+		return errors.Wrap(err, "Couldn't write attack cast time")
 	}
 
 	err = binary.Write(w, little, uint16(len(attack.Damages)))

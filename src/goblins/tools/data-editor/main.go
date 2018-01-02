@@ -63,8 +63,8 @@ func popIdNamePair(tgt *IdNamePair, v game.EnumId) {
 
 func serveStaticGameInfo(w http.ResponseWriter, r *http.Request) {
 	var toWrite StaticInfo
-	toWrite.Stats = make([]IdNamePair, len(combat.AllStats))
-	for i, v := range combat.AllStats {
+	toWrite.Stats = make([]IdNamePair, len(game.AllStats))
+	for i, v := range game.AllStats {
 		popIdNamePair(&toWrite.Stats[i], v)
 	}
 	toWrite.ScalingFuncs = make([]IdNamePair, len(combat.AllScalingFuncs))
